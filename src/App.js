@@ -16,7 +16,7 @@ const uploadImageToS3 = async (imgSrc, pathPrefix) => {
   const base64Data = new Buffer(imgSrc.replace(/^data:image\/\w+;base64,/, ""), 'base64')
   const type = imgSrc.split(';')[0].split('/')[1]
   const extension = type === 'jpeg' ? 'jpg' : type;
-  
+
   const params = {
     Bucket: aws_exports.aws_user_files_s3_bucket,
     Key: `${pathPrefix}/${uuid()}.${extension}`,
@@ -56,8 +56,8 @@ class WebcamCapture extends React.Component {
 
   render() {
     const videoConstraints = {
-      // width: 1280,
-      // height: 720,
+      width: 244,
+      height: 244,
       facingMode: "user"
     };
  
@@ -66,11 +66,11 @@ class WebcamCapture extends React.Component {
         <div>
           <Webcam
             audio={false}
-            height={350}
+            height={244}
             ref={this.setRef}
             screenshotFormat="image/jpeg"
             screenshotWidth={224} // no sense capturing images in a resolution higher than what resnet wants
-            width={350}
+            width={244}
             videoConstraints={videoConstraints}
           />
         </div>
