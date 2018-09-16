@@ -15,10 +15,11 @@ const uploadImageToS3 = async (imgSrc, pathPrefix) => {
 
   const base64Data = new Buffer(imgSrc.replace(/^data:image\/\w+;base64,/, ""), 'base64')
   const type = imgSrc.split(';')[0].split('/')[1]
-
+  const extension = type === 'jpeg' ? 'jpg' : type;
+  
   const params = {
     Bucket: aws_exports.aws_user_files_s3_bucket,
-    Key: `${pathPrefix}/${uuid()}.${type}`,
+    Key: `${pathPrefix}/${uuid()}.${extension}`,
     Body: base64Data,
     ContentEncoding: 'base64',
     ContentType: `image/${type}`
@@ -55,8 +56,8 @@ class WebcamCapture extends React.Component {
 
   render() {
     const videoConstraints = {
-      width: 1280,
-      height: 720,
+      // width: 1280,
+      // height: 720,
       facingMode: "user"
     };
  
