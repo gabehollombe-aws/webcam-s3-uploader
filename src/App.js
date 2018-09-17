@@ -2,16 +2,16 @@ import React, { Component } from 'react';
 import Webcam from 'react-webcam';
 import Amplify, { Auth } from 'aws-amplify';
 import AWS from 'aws-sdk';
-import {v4 as uuid} from 'uuid';
+import { v4 as uuid } from 'uuid';
 import aws_exports from './aws-exports';
 Amplify.configure(aws_exports);
 
 const uploadImageToS3 = async (imgSrc, pathPrefix) => {
   const credentials = await Auth.currentCredentials();
   const s3 = new AWS.S3({
-      apiVersion: '2013-04-01',
-      credentials: Auth.essentialCredentials(credentials)
-    });
+    apiVersion: '2013-04-01',
+    credentials: Auth.essentialCredentials(credentials)
+  });
 
   const base64Data = new Buffer(imgSrc.replace(/^data:image\/\w+;base64,/, ""), 'base64')
   const type = imgSrc.split(';')[0].split('/')[1]
@@ -34,21 +34,29 @@ class WebcamCapture extends React.Component {
     super(props);
     this.state = {
       captureInterval: null,
-      label: ''
+      label: '',
+      totalUploads: 0,
+      uploadsCompleted: 0
     }
   }
   setRef = webcam => {
     this.webcam = webcam;
   };
- 
-  capture = () => {
+
+  capture = async () => {
     const imageSrc = this.webcam.getScreenshot();
-    uploadImageToS3(imageSrc, `public/${this.state.label}`);
+    this.setState({
+      totalUploads: this.state.totalUploads + 1
+    });
+    await uploadImageToS3(imageSrc, `public/${this.state.label}`);
+    this.setState({
+      uploadsCompleted: this.state.uploadsCompleted + 1,
+    });
   };
 
   toggleCapture = () => {
     this.state.captureInterval
-      ? this.setState({ captureInterval: window.clearInterval(this.state.captureInterval) })
+      ? this.setState({ label: '', captureInterval: window.clearInterval(this.state.captureInterval) })
       : this.setState({ captureInterval: window.setInterval(this.capture, this.props.captureInterval) })
   }
 
@@ -60,7 +68,16 @@ class WebcamCapture extends React.Component {
       height: 244,
       facingMode: "user"
     };
- 
+
+    const UploadStatus = () => {
+      if (this.state.totalUploads === 0) return <div>Waiting for capture...</div>
+      return (
+        <div>
+          Uploaded {this.state.uploadsCompleted} of {this.state.totalUploads}
+        </div>
+      )
+    }
+
     return (
       <div>
         <div>
@@ -74,14 +91,15 @@ class WebcamCapture extends React.Component {
             videoConstraints={videoConstraints}
           />
         </div>
-        <input placeholder='Enter a label name' type='text' onChange={this.handleChange} name='label' disabled={this.state.captureInterval} />
+        <input autoFocus='true' placeholder='Enter a label name' type='text' onChange={this.handleChange} name='label' disabled={this.state.captureInterval} />
         <button onClick={this.toggleCapture} disabled={this.state.label === ''}>
           {
             this.state.captureInterval
               ? 'Stop Capturing'
               : 'Begin Capturing'
-            }
+          }
         </button>
+        <UploadStatus />
       </div>
     );
   }
@@ -91,7 +109,7 @@ class App extends Component {
   render() {
     return (
       <div className="App">
-        <WebcamCapture captureInterval={300}/>
+        <WebcamCapture captureInterval={300} />
       </div>
     );
   }
