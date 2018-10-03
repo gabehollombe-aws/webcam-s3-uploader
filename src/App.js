@@ -51,6 +51,21 @@ const getImageKeys = async (datasetName, label) => {
   return result.Contents.map(o => o.Key);
 }
 
+const getLabels = async (datasetName) => {
+  const s3 = await S3();
+  const bucket = aws_exports.aws_user_files_s3_bucket;
+  const result = await s3.listObjectsV2({
+    Bucket: bucket,
+    Prefix: `public/${datasetName}/`,
+    Delimiter: '/'
+  }).promise();
+
+  return result.CommonPrefixes
+  .map(o => o.Prefix)
+  .map(p => p.replace(`public/${datasetName}/`, ''))
+  .map(p => p.replace(`/`, ''));
+}
+
 class WebcamCapture extends React.Component {
   setRef = webcam => {
     this.webcam = webcam;
@@ -120,8 +135,8 @@ class App extends Component {
       datasetName: '',
       label: '',
       fetching: false,
-      totalUploads: 0,
-      uploadsCompleted: 0,
+      staleLabel: true,
+      labelsInDataset: [],
       existingImageKeys: [],
       uploadedImages:{}
     };
@@ -141,12 +156,30 @@ class App extends Component {
     })
   }
 
-  handleChange = (e) => this.setState({ [e.target.name]: e.target.value })
+  handleChange = (e) => {
+    let staleLabel = false;
+
+    if (e.target.name === 'label') {
+      staleLabel = true;
+    }
+
+    this.setState({ 
+      [e.target.name]: e.target.value,
+      staleLabel
+    })
+  }
+
+  handleDatasetNameBlur = async (e) => {
+    this.setState({
+      labelsInDataset: await getLabels(e.target.value)
+    })
+  }
 
   handleLabelBlur = (e) => {
     this.fetchImageKeys(this.state.datasetName, e.target.value);
     this.setState({
-      uploadedImages: {}
+      uploadedImages: {},
+      staleLabel: false
     });
   }
 
@@ -170,36 +203,35 @@ class App extends Component {
     const imageKey = await uploadImageToS3(imageSrc, `public/${this.state.datasetName}/${this.state.label}`);
 
     this.setState({
-      totalUploads: this.state.totalUploads + 1
-    });
-    this.setState({
-      uploadsCompleted: this.state.uploadsCompleted + 1,
       uploadedImages: { ...this.state.uploadedImages, ...{[imageKey]: imageSrc} }
     });
   }
 
   render() {
-    const UploadStatus = () => {
-      return (
-        <div>
-          Uploaded {this.state.uploadsCompleted} of {this.state.totalUploads}
-        </div>
-      )
-    }
-
     return (
       <div>
         <h2>Managing photos inside s3://{aws_exports.aws_user_files_s3_bucket}/{this.state.datasetName}/{this.state.label}/</h2>
         <Form>
           <Form.Group widths='equal'>
-            <Form.Input label='Dataset Name' placeholder='Dataset Name' name='datasetName' onChange={this.handleChange} />
+            <Form.Input label='Dataset Name' placeholder='Dataset Name' name='datasetName' onChange={this.handleChange} onBlur={this.handleDatasetNameBlur} />
             <Form.Input label='Label' placeholder='Label' name='label' onChange={this.handleChange} onBlur={this.handleLabelBlur} />
           </Form.Group>
-          
-          <WebcamCapture onCapture={this.upload} disabled={this.state.label === ''}/>
         </Form>
 
-        {/* <UploadStatus /> */}
+        { 
+          this.state.datasetName !== ''
+          ? <h3>Labels present in {this.state.datasetName}: { this.state.labelsInDataset.join(" ") }</h3>
+          : null
+        }
+
+          
+        <WebcamCapture onCapture={this.upload} disabled={this.state.label === ''}/>
+
+        { 
+          this.state.label !== '' && this.state.staleLabel === false
+          ? <h3>Total images for {this.state.label}: { this.state.existingImageKeys.length + Object.keys(this.state.uploadedImages).length }</h3>
+          : null
+        }
 
         { (this.state.existingImageKeys.length > 0 || Object.keys(this.state.uploadedImages).length > 0)
           ? <h3>Double-click an image to remove it</h3>
