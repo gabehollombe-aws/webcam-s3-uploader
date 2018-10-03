@@ -143,8 +143,7 @@ class App extends Component {
 
   handleChange = (e) => this.setState({ [e.target.name]: e.target.value })
 
-  handleLabelChange = (e) => {
-    this.handleChange(e);
+  handleLabelBlur = (e) => {
     this.fetchImageKeys(this.state.datasetName, e.target.value);
     this.setState({
       uploadedImages: {}
@@ -190,10 +189,11 @@ class App extends Component {
 
     return (
       <div>
+        <h2>Managing photos inside s3://{aws_exports.aws_user_files_s3_bucket}/{this.state.datasetName}/{this.state.label}/</h2>
         <Form>
           <Form.Group widths='equal'>
             <Form.Input label='Dataset Name' placeholder='Dataset Name' name='datasetName' onChange={this.handleChange} />
-            <Form.Input label='Label' placeholder='Label' name='label' onChange={this.handleLabelChange} />
+            <Form.Input label='Label' placeholder='Label' name='label' onChange={this.handleChange} onBlur={this.handleLabelBlur} />
           </Form.Group>
           
           <WebcamCapture onCapture={this.upload} disabled={this.state.label === ''}/>
