@@ -1,9 +1,0 @@
-{
-    "bucketName": "s3webcamuploader83a65c76f8384092b63d212639122190",
-    "authPolicyName": "s3_amplify_e04d1101",
-    "unauthPolicyName": "s3_amplify_e04d1101",
-    "authRoleName": "s3webcamuploader-20180916154045-authRole",
-    "unauthRoleName": "s3webcamuploader-20180916154045-unauthRole",
-    "authPermissions": "rw",
-    "unauthPermissions": "rw"
-}
