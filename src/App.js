@@ -5,8 +5,8 @@ import { S3Image } from 'aws-amplify-react';
 import AWS from 'aws-sdk';
 import { v4 as uuid } from 'uuid';
 import { Form, Image } from 'semantic-ui-react';
-import aws_exports from './aws-exports';
-Amplify.configure(aws_exports);
+import awsmobile from './aws-exports';
+Amplify.configure(awsmobile);
 
 const S3 = async () => {
   const credentials = await Auth.currentCredentials();
@@ -22,7 +22,7 @@ const uploadImageToS3 = async (imgSrc, pathPrefix) => {
   const extension = type === 'jpeg' ? 'jpg' : type;
 
   const params = {
-    Bucket: aws_exports.aws_user_files_s3_bucket,
+    Bucket: awsmobile.aws_user_files_s3_bucket,
     Key: `${pathPrefix}/${uuid()}.${extension}`,
     Body: base64Data,
     ContentEncoding: 'base64',
@@ -37,7 +37,7 @@ const uploadImageToS3 = async (imgSrc, pathPrefix) => {
 const removeImageFromS3 = async (key) => {
   const s3 = await S3();
   return s3.deleteObject({
-    Bucket: aws_exports.aws_user_files_s3_bucket,
+    Bucket: awsmobile.aws_user_files_s3_bucket,
     Key: key
   }).promise()
 }
@@ -45,7 +45,7 @@ const removeImageFromS3 = async (key) => {
 const getImageKeys = async (datasetName, label) => {
   const s3 = await S3();
   const result = await s3.listObjectsV2({
-    Bucket: aws_exports.aws_user_files_s3_bucket,
+    Bucket: awsmobile.aws_user_files_s3_bucket,
     Prefix: `public/${datasetName}/${label}/`,
   }).promise();
   return result.Contents.map(o => o.Key);
@@ -53,7 +53,7 @@ const getImageKeys = async (datasetName, label) => {
 
 const getLabels = async (datasetName) => {
   const s3 = await S3();
-  const bucket = aws_exports.aws_user_files_s3_bucket;
+  const bucket = awsmobile.aws_user_files_s3_bucket;
   const result = await s3.listObjectsV2({
     Bucket: bucket,
     Prefix: `public/${datasetName}/`,
@@ -210,7 +210,7 @@ class App extends Component {
   render() {
     return (
       <div>
-        <h2>Managing photos inside s3://{aws_exports.aws_user_files_s3_bucket}/{this.state.datasetName}/{this.state.label}/</h2>
+        <h2>Managing photos inside s3://{awsmobile.aws_user_files_s3_bucket}/{this.state.datasetName}/{this.state.label}/</h2>
         <Form>
           <Form.Group widths='equal'>
             <Form.Input label='Dataset Name' placeholder='Dataset Name' name='datasetName' onChange={this.handleChange} onBlur={this.handleDatasetNameBlur} />
