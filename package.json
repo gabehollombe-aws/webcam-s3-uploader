@@ -9,7 +9,7 @@
     "node-uuid": "^1.4.8",
     "react": "^16.5.1",
     "react-dom": "^16.5.1",
-    "react-scripts": "1.1.5",
+    "react-scripts": "5.0.1",
     "react-webcam": "^1.0.4",
     "semantic-ui-react": "^0.82.5"
   },
